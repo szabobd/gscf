@@ -8,13 +8,10 @@ import seaborn as sns
 from pathlib import Path
 import unittest
 
-data_dir_selected = r"../data"
-# tickers = ["AMD", "NVDA", "INTC", "MSFT", "AMZN"]
-# selected_color_palette = dict(zip(tickers, plt.get_cmap('tab10', len(tickers)).colors))
 
 class DataLoader:
     """Handles downloading and saving stock data."""
-    def __init__(self, tickers, start_date, end_date, data_dir=data_dir_selected):
+    def __init__(self, tickers, start_date, end_date, data_dir):
         self.tickers = tickers
         self.start_date = start_date
         self.end_date = end_date
@@ -32,9 +29,9 @@ class DataLoader:
 
 class Transformer:
     """Handles data cleaning and transformations."""
-    def __init__(self, data_dir=data_dir_selected):
+    def __init__(self, data_dir):
         self.data_dir = Path(data_dir)
-        self.df = None
+
     def load_and_transform(self, tickers):
         """Loads, cleans, and transforms data."""
         all_data = []
@@ -234,31 +231,35 @@ def main(extract: bool = False, transform: bool = False, analyze: bool = False, 
     tickers = ["AMD", "NVDA", "INTC", "MSFT", "AMZN"]
     start_date = "2020-01-01"
     end_date = "2023-12-31"
-    data_dir = Path(data_dir_selected)
-
+    data_dir = Path(r"../data")
 
     if extract or full:
-        loader = DataLoader(tickers, start_date, end_date)
+        loader = DataLoader(tickers, start_date, end_date, data_dir)
         loader.fetch_and_save()
     
     if transform or full:
-        transformer = Transformer()
+        transformer = Transformer(data_dir)
         df = transformer.load_and_transform(tickers)
     
     if analyze or full:
         analyzer = Analyzer()
-        df = pd.read_csv(data_dir / "merged_stock_data.csv", index_col=["Date", "Ticker"], parse_dates=True)
+        df = pd.read_csv(
+            data_dir / "merged_stock_data.csv",
+            index_col=["Date", "Ticker"],
+            parse_dates=["Date"], 
+            date_format="%Y-%m-%d"
+        )
         df = analyzer.detect_crossovers(df)
         df.to_csv(data_dir / "merged_stock_data_with_analysis.csv")
         print("Analysis completed and saved.")
     
     if visualize:
         df = pd.read_csv(
-        data_dir / "merged_stock_data_with_analysis.csv",
-        index_col=["Date", "Ticker"], 
-        parse_dates=["Date"], 
-        date_format="%Y-%m-%d"
-    )   
+            data_dir / "merged_stock_data_with_analysis.csv",
+            index_col=["Date", "Ticker"], 
+            parse_dates=["Date"], 
+            date_format="%Y-%m-%d"
+        )   
         visualizer = Visualizer(color_palette=dict(zip(tickers, plt.get_cmap('tab10', len(tickers)).colors)))
         visualizer.plot_closing_prices(df)
         visualizer.plot_daily_returns(df)
