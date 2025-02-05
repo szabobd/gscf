@@ -251,7 +251,7 @@ def main(extract: bool = False, transform: bool = False, analyze: bool = False, 
         )
         df = analyzer.detect_crossovers(df)
         df.to_csv(data_dir / "merged_stock_data_with_analysis.csv")
-        print("Analysis completed and saved.")
+        print("Analysis completed.")
     
     if visualize:
         df = pd.read_csv(
