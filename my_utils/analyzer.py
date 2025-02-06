@@ -37,7 +37,7 @@ class Analyzer:
         
         # Shift the signal by one period so that the signal occurs on the day following the crossover.
         df["Crossover"] = df.groupby("Ticker")["Crossover"].shift(1, fill_value=0)
-        print(df['Crossover'].value_counts())
+
         return df
     
     

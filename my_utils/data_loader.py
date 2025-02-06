@@ -17,10 +17,16 @@ class DataLoader:
     def fetch_api_and_save_to_csv(self) -> None:
         """Fetches stock data and saves as CSV."""
         for ticker in self.tickers:
-            df = yf.download(ticker, start=self.start_date, end=self.end_date)
-            file_path = self.data_dir / f"{ticker}.csv"
-            df.to_csv(file_path)
-            print(f"Saved {ticker} data to {file_path}")
+            try:
+                df = yf.download(ticker, start=self.start_date, end=self.end_date)
+                if df.empty:
+                    print(f"No data found for {ticker}, please only provide valid tickers")
+                    exit(1)
+                file_path = self.data_dir / f"{ticker}.csv"
+                df.to_csv(file_path)
+                print(f"Saved {ticker} data to {file_path}")
+            except Exception as e:
+                print(f"Failed to fetch or save data for {ticker}: {e}")
     
     @staticmethod
     def load_reindexed_csv(filename: str, data_dir: str) -> pd.DataFrame:

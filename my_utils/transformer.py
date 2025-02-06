@@ -8,23 +8,24 @@ class Transformer:
     def __init__(self, data_dir: str) -> None:
         self.data_dir = Path(data_dir)
 
-    def load_and_transform(self, tickers: List[str], filename_merged: str) -> pd.DataFrame:
+    def read_and_transform(self, tickers: List[str], filename_merged: str) -> pd.DataFrame:
         """Loads, cleans, and transforms data."""
-        all_data = [self.__get_cleaned_ticker_csv(ticker) for ticker in tickers]
+        all_data = [self._get_cleaned_ticker_csv(ticker) for ticker in tickers]
         self.df = pd.concat(all_data)
-        self.__calculate_metrics()
+        self._calculate_metrics()
         output_path = self.data_dir / filename_merged
         self.df.to_csv(output_path)
         print(f"Transformed data saved to {output_path}")
         return self.df
 
-    def __get_cleaned_ticker_csv(self, ticker: str) -> pd.DataFrame:
+    def _get_cleaned_ticker_csv(self, ticker: str) -> pd.DataFrame:
         file_path = self.data_dir / f"{ticker}.csv"
         df = pd.read_csv(file_path)
-        return self.__clean_ticker_data(df, ticker)
+        return self._clean_ticker_data(df, ticker)
         
     
-    def __clean_ticker_data(self, df: pd.DataFrame, ticker: str) -> pd.DataFrame:
+    @staticmethod
+    def _clean_ticker_data(df: pd.DataFrame, ticker: str) -> pd.DataFrame:
         df = df.iloc[2:].reset_index(drop=True)
         df['Ticker'] = ticker
         df.columns = ['Date', 'Close', 'High', 'Low', 'Open', 'Volume', 'Ticker']
@@ -36,7 +37,7 @@ class Transformer:
         return df
     
 
-    def __calculate_metrics(self) -> None:
+    def _calculate_metrics(self) -> None:
         self.df["Daily Return"] = self.df.groupby('Ticker')['Close'].pct_change()
         self.df["30D Rolling Avg"] = self.df.groupby('Ticker')['Close'].rolling(window=30, min_periods=1).mean().reset_index(level=0, drop=True)
         self.df["14D EMA"] = self.df.groupby('Ticker')['Close'].ewm(span=14, adjust=False).mean().reset_index(level=0, drop=True)

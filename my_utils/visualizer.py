@@ -66,20 +66,9 @@ class Visualizer:
 
         for i, ticker in enumerate(tickers):
             ax = axes[i // 3, i % 3]
-            sns.lineplot(
-                data=self.df.xs(ticker, level="Ticker")["Daily Return"],
-                ax=ax,
-                color=self.color_palette[ticker]
-            )
-            ax.set_title(f"{ticker} Daily Returns", fontsize=14)
-            ax.set_xlabel("Date", fontsize=12)
-            ax.set_ylabel("Daily Return (%)", fontsize=12)
-            self._configure_xaxis(ax)
-            ax.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=1.0, decimals=0))
-            for label in ax.get_xticklabels():
-                label.set_visible(True)
-                label.set_rotation(45)
+            self._draw_grid_plots(ax, ticker)
 
+        # Remove any unused subplots
         for j in range(i + 1, 6):
             fig.delaxes(axes.flatten()[j])
 
@@ -110,7 +99,22 @@ class Visualizer:
             )
             self._plot_crossovers(ax, stock_df, ticker, color)
         ax.set_title("30 Day Rolling Avg & 14 Day EMA with Crossovers", fontsize=16, weight='bold')
-        # x-axis configuration is handled by _finalize_plot via the style_plot decorator
+
+    def _draw_grid_plots(self, ax: Axes, ticker: str) -> None:
+        """Draws the grid of plots for daily returns."""
+        sns.lineplot(
+            data=self.df.xs(ticker, level="Ticker")["Daily Return"],
+            ax=ax,
+            color=self.color_palette[ticker]
+        )
+        ax.set_title(f"{ticker} Daily Returns", fontsize=14)
+        ax.set_xlabel("Date", fontsize=12)
+        ax.set_ylabel("Daily Return (%)", fontsize=12)
+        self._configure_xaxis(ax)
+        ax.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=1.0, decimals=0))
+        for label in ax.get_xticklabels():
+            label.set_visible(True)
+            label.set_rotation(45)
 
     def _plot_scatter(self, ax: Axes, data: pd.DataFrame, ticker: str, color: str, marker: str, label_suffix: str) -> None:
         """Helper to plot scatter data for crossovers."""

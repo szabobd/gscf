@@ -14,12 +14,12 @@ def main(extract: bool = False, transform: bool = False, analyze: bool = False, 
         DataLoader(tickers, start_date, end_date, path).fetch_api_and_save_to_csv()
 
     if transform or full:
-        Transformer(path).load_and_transform(tickers, filename_merged)
+        Transformer(path).read_and_transform(tickers, filename_merged)
 
     if analyze or full:
         Analyzer.analyze_data(path, filename_merged, filename_with_analysis)
 
-    if visualize:
+    if visualize or full:
         visualizer = Visualizer(color_palette=dict(zip(tickers, plt.get_cmap('tab10', len(tickers)).colors)))
         visualizer.visualize(path, filename_with_analysis)
 

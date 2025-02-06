@@ -172,3 +172,5 @@ cython_debug/
 
 utils/whiteboard.ipynb
 data/
+.env
+.vscode/
