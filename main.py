@@ -20,7 +20,8 @@ def main(extract: bool = False, transform: bool = False, analyze: bool = False, 
         Analyzer.analyze_data(path, filename_merged, filename_with_analysis)
 
     if visualize:
-        Visualizer.visualize(path, tickers, filename_with_analysis)
+        visualizer = Visualizer(color_palette=dict(zip(tickers, plt.get_cmap('tab10', len(tickers)).colors)))
+        visualizer.visualize(path, filename_with_analysis)
 
 if __name__ == "__main__":
     typer.run(main)

@@ -13,15 +13,14 @@ class Visualizer:
     def __init__(self, color_palette: Dict[str, tuple]):
         self.color_palette = color_palette
 
-    def visualize(path: str, tickers: List[str], filename_with_analysis: str) -> None:
-        df = DataLoader.load_reindexed_csv(filename_with_analysis, path)
-        visualizer = Visualizer(color_palette=dict(zip(tickers, plt.get_cmap('tab10', len(tickers)).colors)))
-        visualizer.plot_closing_prices(df)
-        visualizer.plot_daily_returns(df)
-        visualizer.plot_moving_averages(df)
+    def visualize(self, path: str, filename_with_analysis: str) -> None:
+        self.df = DataLoader.load_reindexed_csv(filename_with_analysis, path)
+        self._plot_closing_prices()
+        self._plot_daily_returns()
+        self._plot_moving_averages()
 
     @staticmethod
-    def style_plot(func: Callable) -> Callable:
+    def _style_and_draw_plot(func: Callable) -> Callable:
         def wrapper(*args, **kwargs):
             plt.style.use("seaborn-v0_8")
             fig, ax = plt.subplots(figsize=(14, 7))
@@ -48,27 +47,27 @@ class Visualizer:
                   loc='upper left', bbox_to_anchor=(1.05, 1), fontsize=12)
         plt.tight_layout()
 
-    @style_plot
-    def plot_closing_prices(self, df: pd.DataFrame, ax: Optional[Axes] = None) -> None:
+    @_style_and_draw_plot
+    def _plot_closing_prices(self, ax: Optional[Axes] = None) -> None:
         sns.lineplot(
-            data=df,
-            x=df.index.get_level_values("Date"),
+            data=self.df,
+            x=self.df.index.get_level_values("Date"),
             y="Close",
-            hue=df.index.get_level_values("Ticker"),
+            hue=self.df.index.get_level_values("Ticker"),
             ax=ax,
             palette=self.color_palette
         )
         ax.set_title("Stock Closing Prices", fontsize=16, weight='bold')
 
-    def plot_daily_returns(self, df: pd.DataFrame, ax: Optional[Axes] = None) -> None:
-        tickers = df.index.get_level_values("Ticker").unique()
+    def _plot_daily_returns(self, ax: Optional[Axes] = None) -> None:
+        tickers = self.df.index.get_level_values("Ticker").unique()
         fig, axes = plt.subplots(2, 3, figsize=(16, 10), sharex=True, sharey=True)
         fig.suptitle("Daily Returns for Each Stock", fontsize=16, weight='bold')
 
         for i, ticker in enumerate(tickers):
             ax = axes[i // 3, i % 3]
             sns.lineplot(
-                data=df.xs(ticker, level="Ticker")["Daily Return"],
+                data=self.df.xs(ticker, level="Ticker")["Daily Return"],
                 ax=ax,
                 color=self.color_palette[ticker]
             )
@@ -87,11 +86,11 @@ class Visualizer:
         plt.tight_layout(rect=[0, 0.03, 1, 0.95])
         plt.show()
 
-    @style_plot
-    def plot_moving_averages(self, df: pd.DataFrame, ax: Optional[Axes] = None) -> None:
-        tickers = df.index.get_level_values("Ticker").unique()
+    @_style_and_draw_plot
+    def _plot_moving_averages(self, ax: Optional[Axes] = None) -> None:
+        tickers = self.df.index.get_level_values("Ticker").unique()
         for ticker in tickers:
-            stock_df = df.xs(ticker, level="Ticker")
+            stock_df = self.df.xs(ticker, level="Ticker")
             color = self.color_palette[ticker]
             ax.plot(
                 stock_df.index,
