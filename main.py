@@ -1,4 +1,4 @@
-from utils.utils import DataLoader, Transformer, Analyzer, Visualizer, load_csv
+from utils.utils import DataLoader, Transformer, Analyzer, Visualizer
 import matplotlib.pyplot as plt
 from pathlib import Path
 import typer
@@ -8,7 +8,7 @@ def main(extract: bool = False, transform: bool = False, analyze: bool = False, 
     path = Path(data_dir)
 
     if extract or full:
-        DataLoader(tickers, start_date, end_date, path).fetch_and_save()
+        DataLoader(tickers, start_date, end_date, path).fetch_api_and_save_to_csv()
 
     if transform or full:
         Transformer(path).load_and_transform(tickers)
