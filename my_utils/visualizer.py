@@ -1,111 +1,20 @@
-import yfinance as yf
 import pandas as pd
-from typing import List, Dict, Type, Optional, Callable
+from typing import List, Dict, Optional, Callable
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib.ticker as mtick
 from matplotlib.axes._axes import Axes
 import seaborn as sns
-import datetime
-from pathlib import Path
+from my_utils.data_loader import DataLoader
 
 
-class DataLoader:
-    """Handles downloading and saving stock data."""
-    def __init__(self, tickers: List[str], start_date: datetime.date, end_date: datetime.date, data_dir: str):
-        self.tickers = tickers
-        self.start_date = start_date
-        self.end_date = end_date
-        self.data_dir = Path(data_dir)
-        self.data_dir.mkdir(exist_ok=True)
-
-    def fetch_api_and_save_to_csv(self) -> None:
-        """Fetches stock data and saves as CSV."""
-        for ticker in self.tickers:
-            df = yf.download(ticker, start=self.start_date, end=self.end_date)
-            file_path = self.data_dir / f"{ticker}.csv"
-            df.to_csv(file_path)
-            print(f"Saved {ticker} data to {file_path}")
-    
-    def load_csv(filename: str, data_dir: str) -> pd.DataFrame:
-        return pd.read_csv(
-            Path(data_dir) / filename,
-            index_col=["Date", "Ticker"], 
-            parse_dates=["Date"], 
-            date_format="%Y-%m-%d"
-        )
-
-class Transformer:
-    """Handles data cleaning and transformations."""
-    def __init__(self, data_dir: str) -> None:
-        self.data_dir = Path(data_dir)
-
-    def load_and_transform(self, tickers: List[str]) -> pd.DataFrame:
-        """Loads, cleans, and transforms data."""
-        all_data = [self._clean_structure(ticker) for ticker in tickers]
-        self.df = pd.concat(all_data)
-        self._calculate_metrics()
-        output_path = self.data_dir / "merged_stock_data.csv"
-        self.df.to_csv(output_path)
-        print(f"Transformed data saved to {output_path}")
-        return self.df
-
-    def _clean_structure(self, ticker: str) -> pd.DataFrame:
-        file_path = self.data_dir / f"{ticker}.csv"
-        df = pd.read_csv(file_path)
-        df = df.iloc[2:].reset_index(drop=True)
-        df['Ticker'] = ticker
-        df.columns = ['Date', 'Close', 'High', 'Low', 'Open', 'Volume', 'Ticker']
-        df['Date'] = pd.to_datetime(df['Date'])
-        df.set_index(['Ticker', 'Date'], inplace=True)
-        df.sort_index(inplace=True)
-        df['Close'] = pd.to_numeric(df['Close'], errors='coerce')
-        df['Volume'] = pd.to_numeric(df['Volume'], errors='coerce')
-        return df
-
-    def _calculate_metrics(self) -> None:
-        self.df["Daily Return"] = self.df.groupby('Ticker')['Close'].pct_change()
-        self.df["30D Rolling Avg"] = self.df.groupby('Ticker')['Close'].rolling(window=30, min_periods=1).mean().reset_index(level=0, drop=True)
-        self.df["14D EMA"] = self.df.groupby('Ticker')['Close'].ewm(span=14, adjust=False).mean().reset_index(level=0, drop=True)
-        self.df["Volatility"] = self.df.groupby('Ticker')['Daily Return'].rolling(window=10, min_periods=1).std().reset_index(level=0, drop=True)
-        self.df['Close'] = self.df.groupby('Ticker')['Close'].ffill()
-        self.df['Volume'] = self.df.groupby('Ticker')['Volume'].bfill()
-
-
-class Analyzer:
-    """Performs time-series analysis."""
-    
-    @staticmethod
-    def detect_crossovers(df: pd.DataFrame) -> pd.DataFrame:
-        df["Crossover"] = df.groupby('Ticker').apply(
-            lambda group: ((group["30D Rolling Avg"] > group["14D EMA"]) & 
-                           (group["30D Rolling Avg"].shift(1) <= group["14D EMA"].shift(1))).astype(int) - 
-                          ((group["30D Rolling Avg"] < group["14D EMA"]) & 
-                           (group["30D Rolling Avg"].shift(1) >= group["14D EMA"].shift(1))).astype(int)
-        ).reset_index(level=0, drop=True)
-        df["Crossover"] = df.groupby('Ticker')['Crossover'].shift(1, fill_value=0)
-        print(df['Crossover'].value_counts())
-        return df
-    
-    @classmethod
-    def analyze_data(cls: Type['Analyzer'], data_dir: Path, input_filename: str = "merged_stock_data.csv", \
-                      output_filename: str = "merged_stock_data_with_analysis.csv") -> pd.DataFrame:
-
-        df = DataLoader.load_csv(input_filename, data_dir)
-        df = cls.detect_crossovers(df)
-
-        output_path = data_dir / output_filename
-        df.to_csv(output_path)
-
-        print("Analysis completed. Data saved to:", output_path)
-        return df
 
 class Visualizer:
     def __init__(self, color_palette: Dict[str, tuple]):
         self.color_palette = color_palette
 
-    def visualize(path: str, tickers: List[str]) -> None:
-        df = DataLoader.load_csv("merged_stock_data_with_analysis.csv", path)
+    def visualize(path: str, tickers: List[str], filename_with_analysis: str) -> None:
+        df = DataLoader.load_reindexed_csv(filename_with_analysis, path)
         visualizer = Visualizer(color_palette=dict(zip(tickers, plt.get_cmap('tab10', len(tickers)).colors)))
         visualizer.plot_closing_prices(df)
         visualizer.plot_daily_returns(df)

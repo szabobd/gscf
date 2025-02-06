@@ -6,7 +6,7 @@ import sys
 import os
 from typer.testing import CliRunner
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils.oop_practice import DataLoader, Transformer, Analyzer, Visualizer, main
+from utils.utils import DataLoader, Transformer, Analyzer, Visualizer, main
 
 
 def test_set_up(self):
@@ -137,4 +137,21 @@ def test_cli_full_pipeline(self):
     self.assertEqual(result.exit_code, 0)
     self.assertIn("Analysis completed and saved.", result.output)
 
+#----------------------------------------------------------------------------------------------------------------------------
 
+class TestETL(unittest.TestCase):
+    def test_data_loader(self):
+        loader = DataLoader(["AAPL"], "2023-01-01", "2023-12-31", "./data")
+        self.assertIsInstance(loader.tickers, list)
+
+    def test_transformer(self):
+        transformer = Transformer("./data")
+        sample_data = pd.DataFrame({"Close": [100, 102, 104], "Volume": [1000, None, 1200]}, index=pd.to_datetime(["2023-01-01", "2023-01-02", "2023-01-03"]))
+        sample_data["Volume"].bfill(inplace=True)
+        self.assertFalse(sample_data["Volume"].isna().any())
+
+    def test_crossovers(self):
+        sample_data = pd.DataFrame({"30D Rolling Avg": [100, 102, 98], "14D EMA": [101, 101, 99], "Ticker": ["AAPL"] * 3})
+        sample_data.set_index(["Ticker", pd.date_range("2023-01-01", periods=3)], inplace=True)
+        df = Analyzer.detect_crossovers(sample_data)
+        self.assertListEqual(df["Crossover"].tolist(), [0, -1, 1])

@@ -1,4 +1,7 @@
-from utils.utils import DataLoader, Transformer, Analyzer, Visualizer
+from my_utils.data_loader import DataLoader
+from my_utils.transformer import Transformer
+from my_utils.analyzer import Analyzer
+from my_utils.visualizer import Visualizer
 import matplotlib.pyplot as plt
 from pathlib import Path
 import typer
@@ -11,13 +14,13 @@ def main(extract: bool = False, transform: bool = False, analyze: bool = False, 
         DataLoader(tickers, start_date, end_date, path).fetch_api_and_save_to_csv()
 
     if transform or full:
-        Transformer(path).load_and_transform(tickers)
+        Transformer(path).load_and_transform(tickers, filename_merged)
 
     if analyze or full:
-        Analyzer.analyze_data(path)
+        Analyzer.analyze_data(path, filename_merged, filename_with_analysis)
 
     if visualize:
-        Visualizer.visualize(path, tickers)
+        Visualizer.visualize(path, tickers, filename_with_analysis)
 
 if __name__ == "__main__":
     typer.run(main)
