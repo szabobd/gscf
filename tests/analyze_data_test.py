@@ -5,7 +5,7 @@ from pathlib import Path
 from my_utils.analyzer import Analyzer
 from my_utils.data_loader import DataLoader
 
-@patch('my_utils.analyzer.DataLoader.load_reindexed_csv')
+@patch('my_utils.analyzer.DataLoader.read_reindexed_csv')
 @patch.object(Analyzer, 'detect_crossovers')
 def test_analyze_data(mock_detect_crossovers, mock_load_reindexed_csv):
     mock_df = MagicMock(spec=pd.DataFrame)

@@ -80,8 +80,9 @@ All processed data is saved in the `data_dir/` directory. The pipeline generates
 
 ## ⚠️ Known Limitations
 1. **Config constraints:** The script is optimized for five stock tickers and a date range from `2020-01-01` to `2023-12-31`.  
-2. **Short time frames:** A time window smaller than 30 or 14 days may affect rolling average calculations.  
+2. **Short time frames:** A time window smaller than 30 or 14 days affect rolling average calculations. When calculating the moving averages, the parameter `min_periods` was set to 1, so the moving average gets calculated from a smaller window when there are not enogh data points. Take this into consideration when checking these values.
 3. **Ticker count:** The script may not function correctly if the number of tickers differs from five.  
+4. **Moving averages:** When calculating the moving averages, the parameter
 
 ---
 

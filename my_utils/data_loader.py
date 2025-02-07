@@ -29,7 +29,8 @@ class DataLoader:
                 print(f"Failed to fetch or save data for {ticker}: {e}")
     
     @staticmethod
-    def load_reindexed_csv(filename: str, data_dir: str) -> pd.DataFrame:
+    def read_reindexed_csv(filename: str, data_dir: str) -> pd.DataFrame:
+        """Loads reindexed CSV and sets Date and Ticker as index."""
         return pd.read_csv(
             Path(data_dir) / filename,
             index_col=["Date", "Ticker"], 

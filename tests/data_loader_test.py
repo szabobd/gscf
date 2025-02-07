@@ -13,7 +13,7 @@ def setup_data_loader():
     data_dir = 'test_data'
     return DataLoader(tickers, start_date, end_date, data_dir)
 
-# fetch_api_and_save_to_csv tests
+# fetch_api_and_save_to_csv function tests
 
 @patch('my_utils.data_loader.yf.download')
 def test_fetch_api_and_save_to_csv_handles_empty_dataframe(mock_download, setup_data_loader, capfd):
@@ -52,7 +52,7 @@ def test_fetch_api_and_save_to_csv(mock_download, setup_data_loader):
         mock_df.to_csv.assert_any_call(file_path)
         print(f"Tested saving {ticker} data to {file_path}")
 
-# load_reindexed_csv tests
+# load_reindexed_csv function tests
 
 @patch('my_utils.data_loader.pd.read_csv')
 def test_load_reindexed_csv(mock_read_csv):
@@ -61,7 +61,7 @@ def test_load_reindexed_csv(mock_read_csv):
 
     filename = 'test.csv'
     data_dir = 'test_data'
-    result = DataLoader.load_reindexed_csv(filename, data_dir)
+    result = DataLoader.read_reindexed_csv(filename, data_dir)
 
     mock_read_csv.assert_called_once_with(
         Path(data_dir) / filename,
@@ -77,7 +77,7 @@ def test_load_reindexed_csv_file_not_found():
     data_dir = 'test_data'
 
     with pytest.raises(FileNotFoundError):
-        DataLoader.load_reindexed_csv(filename, data_dir)
+        DataLoader.read_reindexed_csv(filename, data_dir)
 
 @patch('my_utils.data_loader.pd.read_csv')
 def test_load_reindexed_csv_invalid_format(mock_read_csv):
@@ -86,7 +86,7 @@ def test_load_reindexed_csv_invalid_format(mock_read_csv):
     mock_read_csv.side_effect = pd.errors.ParserError("Invalid format")
 
     with pytest.raises(pd.errors.ParserError):
-        DataLoader.load_reindexed_csv(filename, data_dir)
+        DataLoader.read_reindexed_csv(filename, data_dir)
 
 @patch('my_utils.data_loader.pd.read_csv')
 def test_load_reindexed_csv_general_exception(mock_read_csv):
@@ -95,7 +95,7 @@ def test_load_reindexed_csv_general_exception(mock_read_csv):
     mock_read_csv.side_effect = Exception("General error")
 
     with pytest.raises(Exception, match="General error"):
-        DataLoader.load_reindexed_csv(filename, data_dir)
+        DataLoader.read_reindexed_csv(filename, data_dir)
 
 
 if __name__ == '__main__':

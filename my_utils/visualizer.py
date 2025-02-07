@@ -8,19 +8,20 @@ import seaborn as sns
 from my_utils.data_loader import DataLoader
 
 
-
 class Visualizer:
     def __init__(self, color_palette: Dict[str, tuple]):
         self.color_palette = color_palette
 
     def visualize(self, path: str, filename_with_analysis: str) -> None:
-        self.df = DataLoader.load_reindexed_csv(filename_with_analysis, path)
+        """Orchestrates visualization of stock data."""
+        self.df = DataLoader.read_reindexed_csv(filename_with_analysis, path)
         self._plot_closing_prices()
         self._plot_daily_returns()
         self._plot_moving_averages()
 
     @staticmethod
     def _style_and_draw_plot(func: Callable) -> Callable:
+        """Decorator to adjust style and actually draw plot."""
         def wrapper(*args, **kwargs):
             plt.style.use("seaborn-v0_8")
             fig, ax = plt.subplots(figsize=(14, 7))
@@ -49,6 +50,7 @@ class Visualizer:
 
     @_style_and_draw_plot
     def _plot_closing_prices(self, ax: Optional[Axes] = None) -> None:
+        """ Sets up plot to visualize closing prices."""
         sns.lineplot(
             data=self.df,
             x=self.df.index.get_level_values("Date"),
@@ -59,7 +61,8 @@ class Visualizer:
         )
         ax.set_title("Stock Closing Prices", fontsize=16, weight='bold')
 
-    def _plot_daily_returns(self, ax: Optional[Axes] = None) -> None:
+    def _plot_daily_returns(self) -> None:
+        """ Sets up plot to visualize daily returns."""
         tickers = self.df.index.get_level_values("Ticker").unique()
         fig, axes = plt.subplots(2, 3, figsize=(16, 10), sharex=True, sharey=True)
         fig.suptitle("Daily Returns for Each Stock", fontsize=16, weight='bold')
@@ -68,7 +71,7 @@ class Visualizer:
             ax = axes[i // 3, i % 3]
             self._draw_grid_plots(ax, ticker)
 
-        # Remove any unused subplots
+        # Removing unused subplots
         for j in range(i + 1, 6):
             fig.delaxes(axes.flatten()[j])
 
@@ -77,6 +80,7 @@ class Visualizer:
 
     @_style_and_draw_plot
     def _plot_moving_averages(self, ax: Optional[Axes] = None) -> None:
+        """ Sets up plot to visualize moving averages and crossovers."""
         tickers = self.df.index.get_level_values("Ticker").unique()
         for ticker in tickers:
             stock_df = self.df.xs(ticker, level="Ticker")

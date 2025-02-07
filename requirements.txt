@@ -1,0 +1,5 @@
+pandas==2.2.3
+yfinance==0.2.52
+matplotlib==3.9.2
+seaborn==0.13.2
+typer==0.15.1

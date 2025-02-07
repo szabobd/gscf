@@ -22,10 +22,10 @@ class Transformer:
         file_path = self.data_dir / f"{ticker}.csv"
         df = pd.read_csv(file_path)
         return self._clean_ticker_data(df, ticker)
-        
     
     @staticmethod
     def _clean_ticker_data(df: pd.DataFrame, ticker: str) -> pd.DataFrame:
+        """Setting column names, data types, and index."""
         df = df.iloc[2:].reset_index(drop=True)
         df['Ticker'] = ticker
         df.columns = ['Date', 'Close', 'High', 'Low', 'Open', 'Volume', 'Ticker']
@@ -36,7 +36,6 @@ class Transformer:
         df['Volume'] = pd.to_numeric(df['Volume'], errors='coerce')
         return df
     
-
     def _calculate_metrics(self) -> None:
         self.df["Daily Return"] = self.df.groupby('Ticker')['Close'].pct_change()
         self.df["30D Rolling Avg"] = self.df.groupby('Ticker')['Close'].rolling(window=30, min_periods=1).mean().reset_index(level=0, drop=True)
