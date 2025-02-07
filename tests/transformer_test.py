@@ -1,6 +1,8 @@
 import pandas as pd
 from unittest.mock import patch
+
 from my_utils.transformer import Transformer
+
 
 @patch.object(Transformer, '_get_cleaned_ticker_csv')
 @patch.object(Transformer, '_calculate_metrics')
@@ -28,23 +30,18 @@ def test_read_and_transform(mock_to_csv, mock_calculate_metrics, mock_get_cleane
     df1 = pd.DataFrame(data1).set_index(['Ticker', 'Date'])
     df2 = pd.DataFrame(data2).set_index(['Ticker', 'Date'])
 
-    # Mock the return values of _get_cleaned_ticker_csv
     mock_get_cleaned_ticker_csv.side_effect = [df1, df2]
 
     transformer = Transformer(data_dir='.')
     result_df = transformer.read_and_transform(tickers=['A', 'B'], filename_merged='merged.csv')
 
-    # Check if _get_cleaned_ticker_csv was called with correct arguments
     mock_get_cleaned_ticker_csv.assert_any_call('A')
     mock_get_cleaned_ticker_csv.assert_any_call('B')
 
-    # Check if _calculate_metrics was called
     mock_calculate_metrics.assert_called_once()
 
-    # Check if to_csv was called with the correct file path
     mock_to_csv.assert_called_once_with(transformer.data_dir / 'merged.csv')
 
-    # Check if the result DataFrame is as expected
     expected_df = pd.concat([df1, df2])
     pd.testing.assert_frame_equal(result_df, expected_df)
 
@@ -64,13 +61,12 @@ def test_get_cleaned_ticker_csv(mock_clean_ticker_data, mock_read_csv):
     mock_read_csv.assert_called_once_with(transformer.data_dir / "A.csv")
     pd.testing.assert_frame_equal(cleaned_df, indexed_df)
 
+
 def test_clean_ticker_data():
     df = get_test_ticker_data()
     ticker = 'A'
     
     cleaned_df = Transformer._clean_ticker_data(df, ticker)
-
-    print(cleaned_df['Close'].dtype)
     
     assert cleaned_df.index.names == ['Ticker', 'Date']
     assert cleaned_df['Close'].dtype == 'float64'
@@ -78,6 +74,7 @@ def test_clean_ticker_data():
     assert cleaned_df.index.get_level_values('Ticker').unique() == [ticker]
     assert cleaned_df.index.get_level_values('Date').dtype == 'datetime64[ns]'
     assert cleaned_df.isna().sum().sum() == 0
+
 
 def test_calculate_metrics():
     data = {
@@ -92,7 +89,6 @@ def test_calculate_metrics():
     transformer = Transformer(data_dir='.')
     transformer.df = df.copy()
     transformer._calculate_metrics()
-    print(transformer.df)
     
     assert 'Daily Return' in transformer.df.columns
     assert '30D Rolling Avg' in transformer.df.columns
@@ -109,6 +105,7 @@ def test_calculate_metrics():
     assert transformer.df['Close'].isna().sum() == 0
     assert transformer.df['Volume'].isna().sum() == 0
 
+
 def get_test_ticker_data() -> pd.DataFrame:
     data = {
         'Date': ['2022-01-01', '2022-01-02', '2022-01-03', '2022-01-04'],
@@ -119,6 +116,7 @@ def get_test_ticker_data() -> pd.DataFrame:
         'Volume': ['1000', '1100', '1200', '1300']
     }
     return pd.DataFrame(data)
+
 
 def get_indexed_test_ticker_data() -> pd.DataFrame:
     df = get_test_ticker_data()

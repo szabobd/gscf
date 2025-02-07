@@ -1,8 +1,10 @@
+import datetime
+
 import pytest
-from unittest.mock import patch, MagicMock, ANY
+from unittest.mock import patch, MagicMock
 from pathlib import Path
 import pandas as pd
-import datetime
+
 from my_utils.data_loader import DataLoader
 
 @pytest.fixture
@@ -11,10 +13,10 @@ def setup_data_loader():
     start_date = datetime.date(2020, 1, 1)
     end_date = datetime.date(2020, 12, 31)
     data_dir = 'test_data'
+
     return DataLoader(tickers, start_date, end_date, data_dir)
 
-# fetch_api_and_save_to_csv function tests
-
+""" fetch_api_and_save_to_csv tests"""
 @patch('my_utils.data_loader.yf.download')
 def test_fetch_api_and_save_to_csv_handles_empty_dataframe(mock_download, setup_data_loader, capfd):
     mock_df = MagicMock(spec=pd.DataFrame)
@@ -27,6 +29,7 @@ def test_fetch_api_and_save_to_csv_handles_empty_dataframe(mock_download, setup_
     captured = capfd.readouterr()
     mock_df.to_csv.assert_not_called()
     assert "No data found for AAPL, please only provide valid tickers" in captured.out
+
 
 @patch('my_utils.data_loader.yf.download')
 def test_fetch_api_and_save_to_csv_handles_exception(mock_download, setup_data_loader, capfd):
@@ -52,8 +55,8 @@ def test_fetch_api_and_save_to_csv(mock_download, setup_data_loader):
         mock_df.to_csv.assert_any_call(file_path)
         print(f"Tested saving {ticker} data to {file_path}")
 
-# load_reindexed_csv function tests
 
+""" load_reindexed_csv tests"""
 @patch('my_utils.data_loader.pd.read_csv')
 def test_load_reindexed_csv(mock_read_csv):
     mock_df = MagicMock(spec=pd.DataFrame)
@@ -72,12 +75,14 @@ def test_load_reindexed_csv(mock_read_csv):
 
     assert result == mock_df
 
+
 def test_load_reindexed_csv_file_not_found():
     filename = 'non_existent_file.csv'
     data_dir = 'test_data'
 
     with pytest.raises(FileNotFoundError):
         DataLoader.read_reindexed_csv(filename, data_dir)
+
 
 @patch('my_utils.data_loader.pd.read_csv')
 def test_load_reindexed_csv_invalid_format(mock_read_csv):
@@ -88,6 +93,7 @@ def test_load_reindexed_csv_invalid_format(mock_read_csv):
     with pytest.raises(pd.errors.ParserError):
         DataLoader.read_reindexed_csv(filename, data_dir)
 
+
 @patch('my_utils.data_loader.pd.read_csv')
 def test_load_reindexed_csv_general_exception(mock_read_csv):
     filename = 'test.csv'
@@ -96,7 +102,3 @@ def test_load_reindexed_csv_general_exception(mock_read_csv):
 
     with pytest.raises(Exception, match="General error"):
         DataLoader.read_reindexed_csv(filename, data_dir)
-
-
-if __name__ == '__main__':
-    pytest.main()

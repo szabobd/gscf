@@ -1,8 +1,9 @@
-import yfinance as yf
-import pandas as pd
 from typing import List
 import datetime
 from pathlib import Path
+
+import yfinance as yf
+import pandas as pd
 
 
 class DataLoader:
@@ -37,3 +38,4 @@ class DataLoader:
             parse_dates=["Date"], 
             date_format="%Y-%m-%d"
         )
+    

@@ -1,6 +1,7 @@
-import pandas as pd
 from typing import List
 from pathlib import Path
+
+import pandas as pd
 
 
 class Transformer:
@@ -15,12 +16,14 @@ class Transformer:
         self._calculate_metrics()
         output_path = self.data_dir / filename_merged
         self.df.to_csv(output_path)
+
         print(f"Transformed data saved to {output_path}")
         return self.df
 
     def _get_cleaned_ticker_csv(self, ticker: str) -> pd.DataFrame:
         file_path = self.data_dir / f"{ticker}.csv"
         df = pd.read_csv(file_path)
+
         return self._clean_ticker_data(df, ticker)
     
     @staticmethod
@@ -30,10 +33,13 @@ class Transformer:
         df['Ticker'] = ticker
         df.columns = ['Date', 'Close', 'High', 'Low', 'Open', 'Volume', 'Ticker']
         df['Date'] = pd.to_datetime(df['Date'])
+
         df.set_index(['Ticker', 'Date'], inplace=True)
         df.sort_index(inplace=True)
+        
         df['Close'] = pd.to_numeric(df['Close'], errors='coerce')
         df['Volume'] = pd.to_numeric(df['Volume'], errors='coerce')
+
         return df
     
     def _calculate_metrics(self) -> None:

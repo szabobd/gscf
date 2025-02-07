@@ -1,11 +1,14 @@
+from pathlib import Path
+
+import typer
+import matplotlib.pyplot as plt
+
+from config import *
 from my_utils.data_loader import DataLoader
 from my_utils.transformer import Transformer
 from my_utils.analyzer import Analyzer
 from my_utils.visualizer import Visualizer
-import matplotlib.pyplot as plt
-from pathlib import Path
-import typer
-from config import *
+
 
 def main(extract: bool = False, transform: bool = False, analyze: bool = False, visualize: bool = False, full: bool = False):
     path = Path(data_dir)
@@ -22,6 +25,7 @@ def main(extract: bool = False, transform: bool = False, analyze: bool = False, 
     if visualize or full:
         visualizer = Visualizer(color_palette=dict(zip(tickers, plt.get_cmap('tab10', len(tickers)).colors)))
         visualizer.visualize(path, filename_with_analysis)
+
 
 if __name__ == "__main__":
     typer.run(main)

@@ -1,10 +1,12 @@
+from typing import Dict, Optional, Callable
+
 import pandas as pd
-from typing import List, Dict, Optional, Callable
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib.ticker as mtick
 from matplotlib.axes._axes import Axes
 import seaborn as sns
+
 from my_utils.data_loader import DataLoader
 
 
@@ -21,20 +23,15 @@ class Visualizer:
 
     @staticmethod
     def _style_and_draw_plot(func: Callable) -> Callable:
-        """Decorator to adjust style and actually draw plot."""
+        """Decorator to adjust style and draw plot."""
         def wrapper(*args, **kwargs):
             plt.style.use("seaborn-v0_8")
             fig, ax = plt.subplots(figsize=(14, 7))
             func(*args, ax=ax, **kwargs)
             Visualizer._finalize_plot(ax)
             plt.show()
-        return wrapper
 
-    @staticmethod
-    def _configure_xaxis(ax: Axes) -> None:
-        """Configures the x-axis formatting for date displays."""
-        ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
-        ax.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
+        return wrapper
 
     @staticmethod
     def _finalize_plot(ax: Axes) -> None:
@@ -43,10 +40,18 @@ class Visualizer:
         ax.set_ylabel("Value", fontsize=14)
         Visualizer._configure_xaxis(ax)
         handles, labels = ax.get_legend_handles_labels()
+
         ax.legend(dict(zip(labels, handles)).values(),
                   dict(zip(labels, handles)).keys(),
                   loc='upper left', bbox_to_anchor=(1.05, 1), fontsize=12)
+        
         plt.tight_layout()
+
+    @staticmethod
+    def _configure_xaxis(ax: Axes) -> None:
+        """Configures the x-axis formatting for date displays."""
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+        ax.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
 
     @_style_and_draw_plot
     def _plot_closing_prices(self, ax: Optional[Axes] = None) -> None:
@@ -82,6 +87,7 @@ class Visualizer:
     def _plot_moving_averages(self, ax: Optional[Axes] = None) -> None:
         """ Sets up plot to visualize moving averages and crossovers."""
         tickers = self.df.index.get_level_values("Ticker").unique()
+
         for ticker in tickers:
             stock_df = self.df.xs(ticker, level="Ticker")
             color = self.color_palette[ticker]
@@ -116,9 +122,17 @@ class Visualizer:
         ax.set_ylabel("Daily Return (%)", fontsize=12)
         self._configure_xaxis(ax)
         ax.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=1.0, decimals=0))
+
         for label in ax.get_xticklabels():
             label.set_visible(True)
             label.set_rotation(45)
+
+    def _plot_crossovers(self, ax: Axes, stock_df: pd.DataFrame, ticker: str, color: str) -> None:
+        """Plots positive and negative crossovers for a given stock."""
+        positive = stock_df[stock_df["Crossover"] == 1]
+        negative = stock_df[stock_df["Crossover"] == -1]
+        self._plot_scatter(ax, positive, ticker, color, '^', 'Positive Crossover')
+        self._plot_scatter(ax, negative, ticker, color, 'v', 'Negative Crossover')
 
     def _plot_scatter(self, ax: Axes, data: pd.DataFrame, ticker: str, color: str, marker: str, label_suffix: str) -> None:
         """Helper to plot scatter data for crossovers."""
@@ -133,10 +147,4 @@ class Visualizer:
                 edgecolor='black',
                 zorder=5
             )
-
-    def _plot_crossovers(self, ax: Axes, stock_df: pd.DataFrame, ticker: str, color: str) -> None:
-        """Plots positive and negative crossovers for a given stock."""
-        positive = stock_df[stock_df["Crossover"] == 1]
-        negative = stock_df[stock_df["Crossover"] == -1]
-        self._plot_scatter(ax, positive, ticker, color, '^', 'Positive Crossover')
-        self._plot_scatter(ax, negative, ticker, color, 'v', 'Negative Crossover')
+    

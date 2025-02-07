@@ -1,12 +1,13 @@
-import pytest
+from pathlib import Path
+
 from unittest.mock import patch, MagicMock
 import pandas as pd
-from pathlib import Path
+
 from my_utils.analyzer import Analyzer
-from my_utils.data_loader import DataLoader
+
 
 @patch('my_utils.analyzer.DataLoader.read_reindexed_csv')
-@patch.object(Analyzer, 'detect_crossovers')
+@patch.object(Analyzer, '_detect_crossovers')
 def test_analyze_data(mock_detect_crossovers, mock_load_reindexed_csv):
     mock_df = MagicMock(spec=pd.DataFrame)
     mock_load_reindexed_csv.return_value = mock_df
@@ -25,10 +26,11 @@ def test_analyze_data(mock_detect_crossovers, mock_load_reindexed_csv):
 
     assert result == mock_df
 
+
 def test_detect_crossovers_with_crossover():
     test_data = create_test_data_with_crossover()
 
-    result = Analyzer.detect_crossovers(test_data)
+    result = Analyzer._detect_crossovers(test_data)
 
     expected_crossover = pd.Series([0, 0, 0, -1, 1, 0, 0, 0, -1, 1], name="Crossover", index=test_data.index)
     pd.testing.assert_series_equal(result["Crossover"], expected_crossover)
@@ -37,10 +39,11 @@ def test_detect_crossovers_with_crossover():
 def test_detect_crossovers_without_crossover():
     test_data = create_test_data_without_crossover()
 
-    result = Analyzer.detect_crossovers(test_data)
+    result = Analyzer._detect_crossovers(test_data)
 
     expected_crossover = pd.Series([0, 0, 0, 0, 0, 0, 0, 0, 0, 0], name="Crossover", index=test_data.index)
     pd.testing.assert_series_equal(result["Crossover"], expected_crossover)
+
 
 def create_test_data_with_crossover() -> pd.DataFrame:
     data = {
@@ -54,6 +57,7 @@ def create_test_data_with_crossover() -> pd.DataFrame:
     df.set_index(['Date', 'Ticker'], inplace=True)
 
     return df
+
 
 def create_test_data_without_crossover() -> pd.DataFrame:
     data = {

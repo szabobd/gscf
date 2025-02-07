@@ -7,22 +7,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from my_utils.visualizer import Visualizer
 
-@patch("my_utils.data_loader.DataLoader.read_reindexed_csv")
-def test_visualize_calls_correct_methods(mock_load_csv):
-    """Ensure visualize method correctly calls internal plotting functions."""
-    mock_load_csv.return_value = sample_data
-    viz = Visualizer(color_palette)
-
-    with patch("matplotlib.pyplot.show"), \
-         patch.object(viz, "_plot_closing_prices") as mock_closing, \
-         patch.object(viz, "_plot_daily_returns") as mock_daily, \
-         patch.object(viz, "_plot_moving_averages") as mock_moving:
-
-        viz.visualize("mock_path", "mock_filename.csv")
-
-        mock_closing.assert_called_once()
-        mock_daily.assert_called_once()
-        mock_moving.assert_called_once()
 
 sample_data = pd.DataFrame({
     "Date": pd.date_range(start="2023-01-01", periods=10, freq="D"),
@@ -36,6 +20,24 @@ sample_data = pd.DataFrame({
 
 color_palette = {"AAPL": "blue"}
 
+
+@patch("my_utils.data_loader.DataLoader.read_reindexed_csv")
+def test_visualize_calls_correct_methods(mock_load_csv):
+    """Ensure visualize method correctly calls internal plotting functions."""
+    mock_load_csv.return_value = sample_data
+    viz = Visualizer(color_palette)
+
+    with patch.object(viz, "_plot_closing_prices") as mock_closing, \
+         patch.object(viz, "_plot_daily_returns") as mock_daily, \
+         patch.object(viz, "_plot_moving_averages") as mock_moving:
+
+        viz.visualize("mock_path", "mock_filename.csv")
+
+        mock_closing.assert_called_once()
+        mock_daily.assert_called_once()
+        mock_moving.assert_called_once()
+
+
 def test_plot_closing_prices():
     """Test closing prices plot without displaying the figure."""
     viz = Visualizer(color_palette)
@@ -45,6 +47,7 @@ def test_plot_closing_prices():
          patch("seaborn.lineplot") as mock_lineplot:
         viz._plot_closing_prices()
         mock_lineplot.assert_called_once()
+
 
 def test_plot_moving_averages():
     """Test moving averages plot without displaying the figure."""
@@ -61,17 +64,18 @@ def test_plot_moving_averages():
 
         assert mock_crossovers.call_count == len(tickers)
 
-def test_plot_daily_returns():
+
+@patch("matplotlib.pyplot.subplots")
+@patch("matplotlib.pyplot.tight_layout")
+@patch("matplotlib.figure.Figure.delaxes")
+def test_plot_daily_returns(mock_delaxes, mock_tight_layout, mock_subplots):
     """Test daily returns plot without displaying the figure."""
     viz = Visualizer(color_palette)
     viz.df = sample_data
     mock_axes = np.array([MagicMock(spec=plt.Axes) for _ in range(6)]).reshape(2, 3)
 
     with patch("matplotlib.pyplot.show"), \
-         patch.object(viz, "_draw_grid_plots") as mock_draw_grid, \
-            patch("matplotlib.pyplot.subplots") as mock_subplots, \
-                patch("matplotlib.pyplot.tight_layout") as mock_tight_layout, \
-                    patch("matplotlib.figure.Figure.delaxes") as mock_delaxes:
+         patch.object(viz, "_draw_grid_plots") as mock_draw_grid:
         mock_subplots.return_value = (plt.figure(), mock_axes)
         viz._plot_daily_returns()
         mock_draw_grid.assert_called_once()
@@ -102,13 +106,14 @@ def test_plot_crossovers():
         assert_frame_equal(df1, expected_positive)
         assert_frame_equal(df2, expected_negative)
 
-def test_draw_grid_plots():
+
+@patch("seaborn.lineplot")
+def test_draw_grid_plots(mock_lineplot):
     """Test grid plot for daily returns."""
     viz = Visualizer(color_palette)
     mock_df = MagicMock(spec=pd.DataFrame)
     viz.df = mock_df
     fig, ax = plt.subplots()
 
-    with patch("seaborn.lineplot") as mock_lineplot:
-        viz._draw_grid_plots(ax, "AAPL")
-        mock_lineplot.assert_called_once()
+    viz._draw_grid_plots(ax, "AAPL")
+    mock_lineplot.assert_called_once()
