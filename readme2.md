@@ -70,7 +70,13 @@ pytest
 ```
 
 ## 📊 Output
-Generated CSV files are saved in the `data_dir/` directory. Each JSON result set is stored within `result_json_sets/`, grouped by `experiment_id`.
+All processed data is saved in the `data_dir/` directory. The pipeline generates:  
+
+- **Five separate `.csv` files**—one for each selected ticker, containing raw extracted stock data.  
+- **Two additional `.csv` files**:  
+  - `filename_merged.csv` — Stores the merged and formatted data from all tickers.  
+  - `filename_with_analysis.csv` — Contains the analyzed data, including calculated indicators and crossovers.  
+
 
 ## ⚠️ Known Limitations
 1. **Config constraints:** The script is optimized for five stock tickers and a date range from `2020-01-01` to `2023-12-31`.  
